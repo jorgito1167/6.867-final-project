@@ -4,19 +4,25 @@ import matplotlib.pyplot as plt
 from sklearn import linear_model
 
 def run():
+    '''
+    Extracts the data and runs a basic regression model
+    '''
+    
     df_train = pd.read_csv('../train.csv', header=0)
     df_test = pd.read_csv('../test.csv', header=0)
     df_train['time'] = df_train['datetime'].apply(convert_date)
     df_test['time'] = df_test['datetime'].apply(convert_date)
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
                 'atemp', 'humidity', 'windspeed']
+                
     x = df_train[features]
     y = df_train['count']
     model = linear_model.ElasticNetCV(n_jobs = 3)
     model.fit(x,y)
+    
     x_test = df_test[features]
     df_test['count'] = model.predict(x_test)
-    df_test['count'][df_test['count']<0] = 0
+    df_test['count'][ df_test['count']<0 ] = 0
     output = df_test[['datetime', 'count']]
     output.to_csv('out.csv', index = False)
 
@@ -39,10 +45,11 @@ def discrete_vs_count(df, field):
         c = df['count'][df[field] == i]
         counts.append(c.sum()/len(c))
     return vals, counts
-def weather_vs_count(df):
-    vals = df['weather'].unique()
 
-if __name__ == '__main__':
+def visualize():
+    '''
+    Produces a plot of count vs each of the 9 features.
+    '''
     df_train = pd.read_csv('../train.csv', header=0)
     df_train['time'] = df_train['datetime'].apply(convert_date)
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
@@ -56,4 +63,8 @@ if __name__ == '__main__':
             axarr[i,j].plot(x,y)
             axarr[i,j].set_title("counts vs " + features[index]) 
     plt.show()
+
+if __name__ == '__main__':
+    visualize()
+    #run()
   
