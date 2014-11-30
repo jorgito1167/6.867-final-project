@@ -35,8 +35,8 @@ def produce_subsets(x, season, holiday, workingday, weather):
     Produces subsets of the data that satisfy the following categorical
     data. Arrays can be input for multiple types of the same category.
     '''
-    return x[(x['season'] == season) & (x['holiday'] == holiday) &
-        (x['workingday'] == workingday) & (x['weather'] == weather)]
+    return x[(x['season'].isin(season)) & (x['holiday'].isin(holiday)) &
+        (x['workingday'].isin(workingday)) & (x['weather'].isin(weather))]
     
 def convert_date(date):
     d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
