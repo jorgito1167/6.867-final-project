@@ -16,11 +16,6 @@ def read_clean():
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
                 'atemp', 'humidity', 'windspeed']
     
-    change_season(df_train)
-    change_weather(df_train)
-    
-    change_season(df_test)
-    change_weather(df_test)
     
     x = df_train[features]
     y = df_train['count']
@@ -35,20 +30,13 @@ def read_clean():
     output.to_csv('out.csv', index = False)
 
 
-def change_season(df):
-    new_season = df['season'].copy()
-    new_season[df['season']==2] = 3
-    new_season[df['season']==3] = 4
-    new_season[df['season']==4] = 2
-    df['season'] = new_season
-    return df
-
-def change_weather(df):
-    new_weather = df['weather'].copy()
-    new_weather[df['weather']==3] = 4
-    new_weather[df['weather']==4] = 3
-    df['weather'] = new_weather
-    return df
+def produce_subsets(x, season, holiday, workingday, weather):
+    '''
+    Produces subsets of the data that satisfy the following categorical
+    data. Arrays can be input for multiple types of the same category.
+    '''
+    return x[(x['season'] == season) & (x['holiday'] == holiday) &
+        (x['workingday'] == workingday) & (x['weather'] == weather)]
     
 def convert_date(date):
     d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
