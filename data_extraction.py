@@ -3,34 +3,21 @@ import datetime
 import pylab as plt
 from sklearn import linear_model
 
-def read_clean():
+def read_data():
     '''
     Extracts the data and does some basic rearranging
     '''
     
     df_train = pd.read_csv('../train.csv', header=0)
     df_test = pd.read_csv('../test.csv', header=0)
+    
+    df_train['index'] = df_train.index
+    df_test['index'] = df_test.index
+    
+    df_train = create_features(df_train)
+    df_test = create_features(df_test)
 
-    df_train['time'] = df_train['datetime'].apply(convert_date)
-    df_test['time'] = df_test['datetime'].apply(convert_date)
-    features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
-                'atemp', 'humidity', 'windspeed']
-    
-    
-    x = df_train[features]
-    y = df_train['count']
-    
-    x = create_features(x)
-    
-    model = linear_model.ElasticNetCV(n_jobs = 3)
-    model.fit(x,y)
-    
-    x_test = df_test[features]
-    df_test['count'] = model.predict(x_test)
-    df_test['count'][ df_test['count']<0 ] = 0
-    output = df_test[['datetime', 'count']]
-    output.to_csv('out.csv', index = False)
-
+    return df_train, df_test 
 
 def produce_subsets(x, season, holiday, workingday, weather):
     '''
@@ -43,6 +30,40 @@ def produce_subsets(x, season, holiday, workingday, weather):
 def create_features(x):
     x['hour'] = x['datetime'].apply(create_hour)
     x['dow'] = x['datetime'].apply(create_dow)
+        
+def produce_splits(df):
+    df_list = split_var('season', [df])
+    df_list = split_var('holiday', df_list)
+    df_list = split_var('workingday', df_list) 
+    df_list = split_weather(df_list)  
+    #split_weekday(df_list)
+    return df_list
+
+def split_var(var, df_list):        
+    new_splits = []
+    unique = df_list[0][var].unique()
+    for df in df_list:
+        for i in unique:
+            new_splits.append(df[df[var]==i])
+    return new_splits
+    
+def split_weather(df_list):
+    new_splits = []
+    for df in df_list:
+        for i in xrange(1,4):
+            if i ==3:
+                new_splits.append(df[df['season'].isin([i,i+1])])
+            else:
+                new_splits.append(df[df['season']==i])
+    df_list = new_splits
+    return new_splits
+    
+def split_weekday(df_list):
+    new_splits = []
+    for df in df_list:
+        new_splits.append(df[df['weekday'].isin([0,1,2,3,4])])
+        new_splits.append(df[df['weekday'].isin([5,6])])
+    df_list = new_splits
     
 def create_hour(date):
     d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
@@ -51,3 +72,7 @@ def create_hour(date):
 def create_dow(date):
     d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     return d.weekday()
+    
+if __name__ == '__main__':
+    read_data()
+  
