@@ -20,6 +20,8 @@ def read_clean():
     x = df_train[features]
     y = df_train['count']
     
+    x = create_features(x)
+    
     model = linear_model.ElasticNetCV(n_jobs = 3)
     model.fit(x,y)
     
@@ -37,10 +39,15 @@ def produce_subsets(x, season, holiday, workingday, weather):
     '''
     return x[(x['season'].isin(season)) & (x['holiday'].isin(holiday)) &
         (x['workingday'].isin(workingday)) & (x['weather'].isin(weather))]
-    
-def convert_date(date):
-    d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-    time = d.hour + d.minute/60.0 + d.second/3600.0
-    return time
 
-  
+def create_features(x):
+    x['hour'] = x['datetime'].apply(create_hour)
+    x['dow'] = x['datetime'].apply(create_dow)
+    
+def create_hour(date):
+    d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    return d.hour
+
+def create_dow(date):
+    d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    return d.weekday()
