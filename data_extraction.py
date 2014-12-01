@@ -43,5 +43,7 @@ def convert_date(date):
     time = d.hour + d.minute/60.0 + d.second/3600.0
     return time
     
-
+if __name__ == '__main__':
+    visualize()
+    #run()
   
