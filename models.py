@@ -3,7 +3,8 @@ from sklearn import linear_model
 from sklearn import neighbors
 from sklearn import gaussian_process
 from sklearn import svm
-
+from sklearn.feature_selection import SelectKBest
+import config
 '''
 Each train method takes in the training dataframe and
 uses the data to output a trained model with tuned 
@@ -11,20 +12,24 @@ hyperparameters. Cross-validation, tuning of hyperparameter
 and feature creation should happen in the function.
 '''
 
-def train_k_nearest_neighbors(df_train):
+def train_k_nearest_neighbors(df_train, user_type):
     
     ##Feature Selection model 
+    fm = feature_model(config.non_features)
+    
     ## Model Training
+    x = fm.select_features(df_train)
+    
+    if user_type == 0:
+        y = df_train['registered'].values
+    else: 
+        y = df_train['casual'].values
+        
     ## Cross Validation
-    k = 5
-    features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
-                'atemp', 'humidity', 'windspeed']
-    x = df_train[features].values
-    y = df_train['count'].values
     model = neighbors.KNeighborsRegressor(n_neighbors=k, weights='distance', 
                                     algorithm='kd_tree')
     model.fit(x,y)
-    return feature_ model, model
+    return fm, model
                                     
 def train_ridge_regression(df_test, df_train):
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
