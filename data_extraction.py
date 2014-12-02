@@ -30,6 +30,7 @@ def produce_subsets(x, season, holiday, workingday, weather):
 def create_features(x):
     x['hour'] = x['datetime'].apply(create_hour)
     x['dow'] = x['datetime'].apply(create_dow)
+    return x
         
 def produce_splits(df):
     df_list = split_var('season', [df])

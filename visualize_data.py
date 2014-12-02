@@ -87,7 +87,45 @@ def plot3d(df, var_list, user, ax):
     ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm,
         linewidth=0, antialiased=False)
 
-def get_knn_value(df
+def heatmap(df):
+    rows = list(df['dow'].unique())
+    columns = list(df['hour'].unique())
+    
+    # Make data
+    registered_counts = np.zeros((len(rows),len(columns)))
+    casual_counts = np.zeros((len(rows),len(columns)))
+    for i in rows:
+        for j in columns:
+            registered_counts[i][j] = sum(df[(df['dow'] == i) 
+                                & (df['hour'] == j)]['registered'])
+            casual_counts[i][j] = sum(df[(df['dow'] == i) 
+                                & (df['hour'] == j)]['casual'])
+                                
+    row_names = ['M', 'T', 'W', 'Th', 'F', 'Sat', 'Sun']
+    fig,ax=plt.subplots()
+    ax.pcolor(registered_counts,cmap=plt.cm.Blues)
+    ax.set_xticks(np.arange(0,len(columns))+0.5)
+    ax.set_yticks(np.arange(0,len(rows))+0.5)
+    ax.xaxis.tick_top()
+    ax.yaxis.tick_left()
+    ax.set_xticklabels(columns,minor=False,fontsize=10)
+    ax.set_yticklabels(row_names,minor=False,fontsize=10)
+    plt.text(0.5,1.08,'Registered Counts by Hour and Day of Week',
+            fontsize=20,
+            horizontalalignment='center',
+            transform=ax.transAxes
+            )
+    plt.ylabel('Day of the Week',fontsize=20)
+    plt.xlabel('Hour',fontsize=20)
+    ax.set_xlim(0,24)
+    plt.show()
+    # variable correlation
+    # day of week vs hour
+    # holiday vs hour
+    
+
+def get_knn_value(df):
+    pass
 def plot_var_3d(df, var_list):
     wds = [0,1]
     user_type = [0,1]
