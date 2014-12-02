@@ -1,18 +1,18 @@
 import data_extraction as de
-import models as m
+import models 
 import pandas as pd
 
 def train(df_train):
     df_splits = de.produce_splits(df_train)
-    models = []
-    train_method = m.train_k_nearest_neighbors # same model for each split
+    model_list = []
+    train_method = models.train_k_nearest_neighbors # same model for each split
     for df in df_splits:
-        models.append(train_method(df), 0) # registered
-        models.append(train_method(df), 1) # casual
+        model_list.append(train_method(df, 0)) # registered
+        model_list.append(train_method(df, 1)) # casual
     return models
     
 
-def predict(models, df_test):
+def predict(model_list, df_test):
     df_splits = de.produce_splits(df_test)
     
     if len(models)!= 2*len(df_splits):
@@ -21,11 +21,8 @@ def predict(models, df_test):
     out_df = pd.DataFrame()
     for i in xrange(len(df_splits)):
         
-        x = extract_knn_features(df_splits[i],0)
-        r_count = models[2*i].predict(x)
-        
-        x = extract_knn_features(df_splits[i],1)
-        c_count = models[2*i+1].predict(x)
+        r_count = model_list[2*i].predict(x)
+        c_count = model_list[2*i+1].predict(x)
         
         df_splits[i]['registered'] = r_count
         df_splits[i]['casual'] = c_count

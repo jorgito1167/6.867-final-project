@@ -39,8 +39,7 @@ def train_ridge_regression(df_test, df_train):
                 'atemp', 'humidity', 'windspeed']
     x = df_train[features].values
     y = df_train['count'].values
-    model = linear_model.Ridge(alpha=1.0, fit_intercept=True, normalize=False, 
-    copy_X=True, max_iter=None, tol=0.001, solver='auto')
+    model = linear_model.Ridge(alpha=1.0)
     
 def train_LASSO(df_test, df_train):
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
