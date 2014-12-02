@@ -8,6 +8,8 @@ from sklearn.cross_validation import cross_val_score
 from sklearn.pipeline import Pipeline
 import config
 import main as m
+import timeit
+
 '''
 Each train method takes in the training dataframe and
 uses the data to output a trained model with tuned 
@@ -19,14 +21,18 @@ def train_k_nearest_neighbors(df, user_type):
     x = df.drop(config.non_features, 1).values
     y = df['casual' if user_type else 'registered']
     
-    feat_filter = SelectKBest(config.filter, k=10)
+    feat_filter = SelectKBest(config.filter, k=1)
     model = neighbors.KNeighborsRegressor(n_neighbors=5, weights='distance', algorithm='kd_tree')
     mod_knn = Pipeline([('filter', feat_filter), ('knn', model)])
     best_score = float('inf')
-    for k in xrange(10,31):
+    for k in xrange(1,4):
         for n in xrange(5,10):
+            print 'ok'
             mod_knn.set_params(filter__k= k, knn__n_neighbors= n)
-            val_score = cross_val_score(mod_knn, x, y, scoring = m.metric, cv = 8, n_jobs = 2)
+            mod_knn.fit(x,y)
+            print 'ok1'
+            val_score = cross_val_score(mod_knn, x, y, scoring = 'log_loss', cv = 3)
+            print 'ok2'
             if val_score < best_score:
                 best_score = val_score
                 best_k = k
@@ -34,12 +40,36 @@ def train_k_nearest_neighbors(df, user_type):
     mod_knn.set_params(filter__k= best_k, knn__n_neighbors= best_n)
     return mod_knn
                                     
-def train_ridge_regression(df_test, df_train):
-    features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
-                'atemp', 'humidity', 'windspeed']
-    x = df_train[features].values
-    y = df_train['count'].values
+def train_ridge_regression(df, user_type):
+    print 'Start training'
+    start = timeit.default_timer()
+    if df.empty:
+        return None
+    x = df.drop(config.non_features, 1).values
+    y = df['casual' if user_type else 'registered']
+    
+    feat_filter = SelectKBest(config.filter, k=1)
     model = linear_model.Ridge(alpha=1.0)
+    mod_ridge = Pipeline([('filter', feat_filter), ('ridge', model)])
+    best_score = float('inf')
+    
+    for k in xrange(1,4):
+        for n in xrange(1,10):
+            mod_ridge.set_params(filter__k= k, ridge__alpha= n)
+            val_score = cross_val_score(mod_ridge, x, y, scoring = m.metric, cv = 8)
+            mean_val_score = val_score.mean()
+            print 'ok'
+            print mean_val_score
+            if mean_val_score < best_score:
+                best_score = mean_val_score
+                best_k = k
+                best_n = n
+    mod_ridge.set_params(filter__k= best_k, ridge__alpha= best_n)
+    print "Size of split: " + str(len(y))
+    print "Time to train: " + str(timeit.default_timer()-start)
+    print 'Done training'
+    return mod_ridge
+    
     
 def train_LASSO(df_test, df_train):
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',

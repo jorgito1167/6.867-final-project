@@ -1,3 +1,4 @@
+import ranking 
 
-non_features = ['index', 'registered', 'casual', 'counts', 'datetime','holiday', 'workingday', 'season', 'weather']
-filter = **
+non_features = ['index', 'registered', 'casual', 'count', 'datetime','holiday', 'workingday', 'season', 'weather']
+filter = ranking.rf_ranking

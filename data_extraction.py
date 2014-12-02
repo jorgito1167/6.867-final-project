@@ -14,8 +14,8 @@ def read_data():
     df_train['index'] = df_train.index
     df_test['index'] = df_test.index
      
-    df_train = create_features(df_train)
-    df_test = create_features(df_test)
+    create_features(df_train)
+    create_features(df_test)
 
     return df_train, df_test 
 
