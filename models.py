@@ -13,7 +13,7 @@ and feature creation should happen in the function.
 
 def train_k_nearest_neighbors(df_train):
     
-    ##Feature Selection
+    ##Feature Selection model 
     ## Model Training
     ## Cross Validation
     k = 5
@@ -24,7 +24,7 @@ def train_k_nearest_neighbors(df_train):
     model = neighbors.KNeighborsRegressor(n_neighbors=k, weights='distance', 
                                     algorithm='kd_tree')
     model.fit(x,y)
-    return model
+    return feature_ model, model
                                     
 def train_ridge_regression(df_test, df_train):
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
