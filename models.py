@@ -4,7 +4,10 @@ from sklearn import neighbors
 from sklearn import gaussian_process
 from sklearn import svm
 from sklearn.feature_selection import SelectKBest
+from sklearn.cross_validation import cross_val_score
+from sklearn.pipeline import Pipeline
 import config
+import main as m
 '''
 Each train method takes in the training dataframe and
 uses the data to output a trained model with tuned 
@@ -12,24 +15,24 @@ hyperparameters. Cross-validation, tuning of hyperparameter
 and feature creation should happen in the function.
 '''
 
-def train_k_nearest_neighbors(df_train, user_type):
+def train_k_nearest_neighbors(df, user_type):  
+    x = df.drop(config.non_features, 1).values
+    y = df['casual' if user_type else 'registered']
     
-    ##Feature Selection model 
-    fm = feature_model(config.non_features)
-    
-    ## Model Training
-    x = fm.select_features(df_train)
-    
-    if user_type == 0:
-        y = df_train['registered'].values
-    else: 
-        y = df_train['casual'].values
-        
-    ## Cross Validation
-    model = neighbors.KNeighborsRegressor(n_neighbors=k, weights='distance', 
-                                    algorithm='kd_tree')
-    model.fit(x,y)
-    return fm, model
+    feat_filter = SelectKBest(config.filter, k=10)
+    model = neighbors.KNeighborsRegressor(n_neighbors=5, weights='distance', algorithm='kd_tree')
+    mod_knn = Pipeline([('filter', feat_filter), ('knn', model)])
+    best_score = float('inf')
+    for k in xrange(10,31):
+        for n in xrange(5,10):
+            mod_knn.set_params(filter__k= k, knn__n_neighbors= n)
+            val_score = cross_val_score(mod_knn, x, y, scoring = m.metric, cv = 8, n_jobs = 2)
+            if val_score < best_score:
+                best_score = val_score
+                best_k = k
+                best_n = n
+    mod_knn.set_params(filter__k= best_k, knn__n_neighbors= best_n)
+    return mod_knn
                                     
 def train_ridge_regression(df_test, df_train):
     features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
