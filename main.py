@@ -11,21 +11,20 @@ def train(df_train):
     start = timeit.default_timer()
     log_file = open('log_file.csv' , 'w')#+ datetime.datetime.now().isoformat(), 'w')
     log_file.write(config.split_variables())
-    
+
     df_splits = de.process_df(df_train) # splits, normalizes, binarizes, and expands
-    
     model_list = []
-    train_method = models.train_ridge_regression # same model for each split
+    train_method = models.train_elastic_nets # same model for each split
     counter = 1
     for df in df_splits:
         if df.empty:
             model_list.extend([None,None])
-            log_file.write('0,\n')
+            log_file.write(str(counter) + ',0,\n')
         else:
             mod1,str1 = train_method(df, 0)
             model_list.append(mod1) # registered
             mod2,str2 = train_method(df, 1)
-            model_list.append(train_method(df, 1)) # casual
+            model_list.append(mod2) # casual
             log_file.write(str(counter) + ', registered,' + config.get_vars(df) + str1)
             log_file.write(str(counter) + ', casual,'+ config.get_vars(df) + str2)
         counter += 1
@@ -47,7 +46,6 @@ def predict(model_list, df_test):
        
         x = df_splits[i].drop(config.non_features_counts, 1).values
         if model_list[2*i] != None:
-            print model_list[2*i]
             r_count = model_list[2*i].predict(x)
             r_count[r_count < 0] = 0
         else:

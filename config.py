@@ -1,14 +1,15 @@
 import ranking 
 
+<<<<<<< HEAD
 # unimportant features for splitting AND predicting = [atemp, season, datetime]
 # binarized features = [weather]
 # splitting features = [segment, holiday, workingday]
 non_features = ['index', 'atemp', 'registered', 'casual', 'count', 'segment','datetime','holiday', 'workingday', 'season', 'weather']
 non_features_counts = ['index', 'atemp','segment','datetime','holiday', 'workingday', 'season', 'weather']
 filter = ranking.rf_ranking
-folds = 2
+folds = 4
 split_vars = 'size_of_split, segment, holiday, workingday'
-
+=======
 def split_variables():
     split_variables = 'split number, count_type,' + split_vars +',time_to_train, best_k, best_alpha'
     for i in xrange(folds):

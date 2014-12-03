@@ -100,6 +100,7 @@ def train_LASSO(df, user_type):
                 best_k = k
                 best_n = n
     mod_lasso.set_params(filter__k= best_k, lasso__alpha= best_n)
+    mod_lasso.fit(x,y)
     time_to_train = str(np.round(timeit.default_timer()-start,2))
     out_str = time_to_train + ',' + str(best_k) + ',' + str(best_n) + ','
     out_str += str(np.round(best_v_score,3).tolist())[1:-1] + ',' + str(best_score) + '\n'
@@ -109,8 +110,6 @@ def train_LASSO(df, user_type):
     
 def train_elastic_nets(df, user_type):
     start = timeit.default_timer()
-    if df.empty:
-        return None
     x = df.drop(config.non_features, 1).values
     y = df['casual' if user_type else 'registered']
     
@@ -131,6 +130,7 @@ def train_elastic_nets(df, user_type):
                 best_k = k
                 best_n = n
     mod_elastic.set_params(filter__k= best_k, elastic__alpha= best_n)
+    mod_elastic.fit(x,y)
     time_to_train = str(np.round(timeit.default_timer()-start,2))
     out_str = time_to_train + ',' + str(best_k) + ',' + str(best_n) + ','
     out_str += str(np.round(best_v_score,3).tolist())[1:-1] + ',' + str(best_score) + '\n'
@@ -192,6 +192,7 @@ def train_support_vector_regression(df, user_type):
                     best_g = g
                     best_C = C
     mod.set_params(filter__k= best_k, svr__gamma= best_g, svr__C= best_C)
+    mod.fit(x,y)
     time_to_train = str(np.round(timeit.default_timer()-start,2))
     out_str = time_to_train + ',' + str(best_k) + ',' + str(best_C) + ','
     out_str += str(np.round(best_v_score,3).tolist())[1:-1] + ',' + str(best_score) + '\n'

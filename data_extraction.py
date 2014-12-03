@@ -154,6 +154,3 @@ def expand_features(df_splits):
         df['w2_temp_inter'] = df['weather2']*df['temp']
         df['w3_temp_inter'] = df['weather3']*df['temp']
     return df_splits
-#if __name__ == '__main__':
-#    read_data()
-#  
