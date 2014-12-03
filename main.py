@@ -11,7 +11,9 @@ def train(df_train):
     start = timeit.default_timer()
     log_file = open('log_file.csv' , 'w')#+ datetime.datetime.now().isoformat(), 'w')
     log_file.write(config.split_variables())
-    df_splits = de.produce_splits(df_train)
+    
+    df_splits = de.process_df(df_train) # splits, normalizes, binarizes, and expands
+    
     model_list = []
     train_method = models.train_ridge_regression # same model for each split
     counter = 1
@@ -33,7 +35,7 @@ def train(df_train):
     
 
 def predict(model_list, df_test):
-    df_splits = de.produce_splits(df_test)
+    df_splits = de.process_df(df_test) # splits, normalizes, binarizes, and expands
     
     if len(model_list)!= 2*len(df_splits):
         raise RuntimeError('Different number of models and splits')
@@ -74,6 +76,11 @@ def metric(estimator, x, y):
     
     
 def run():
+    df_train, df_test = de.read_data()
+    model_list = train(df_train)
+    out_df = predict(model_list, df_test)
+
+if __name__ == '__main__':
     df_train, df_test = de.read_data()
     model_list = train(df_train)
     out_df = predict(model_list, df_test)
