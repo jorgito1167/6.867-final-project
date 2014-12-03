@@ -118,7 +118,7 @@ def train_elastic_nets(df, user_type):
     mod_elastic = Pipeline([('filter', feat_filter), ('elastic', model)])
     best_score = float('inf')
     
-    for k in xrange(1,5):
+    for k in xrange(1,10):
         for n in [1e-3, 1, 1e3]:
             mod_elastic.set_params(filter__k= k, elastic__alpha= n)
             val_score = cross_val_score(mod_elastic, x, y, scoring = m.metric, cv = config.folds, n_jobs = 3)
@@ -136,6 +136,7 @@ def train_elastic_nets(df, user_type):
     out_str += str(np.round(best_v_score,3).tolist())[1:-1] + ',' + str(best_score) + '\n'
     print "Size of split: " + str(len(y))
     print "Time to train: " + time_to_train
+    print "Best score: " + str(best_score)
     return mod_elastic, out_str
     
 
@@ -198,6 +199,7 @@ def train_support_vector_regression(df, user_type):
     out_str += str(np.round(best_v_score,3).tolist())[1:-1] + ',' + str(best_score) + '\n'
     print "Size of split: " + str(len(y))
     print "Time to train: " + time_to_train
+    print "Best score: " + str(best_score)
     return mod, out_str
     
 

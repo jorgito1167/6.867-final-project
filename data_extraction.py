@@ -87,9 +87,8 @@ def split_weekday(df_list):
     df_list = new_splits
     
 def change_weather(df):
-    x = df[df['weather'] == 4]
-    x['weather'] = 3
-    return x
+    df.loc[df['weather']==4,'weather'] = 3
+    return df
 
 def create_hour(date):
     d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
