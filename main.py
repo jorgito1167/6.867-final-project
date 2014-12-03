@@ -4,17 +4,30 @@ import pandas as pd
 import numpy as np
 import config
 import timeit
+import datetime
 
 def train(df_train):
     print 'Start Training'
     start = timeit.default_timer()
+    log_file = open('log_file.csv' , 'w')#+ datetime.datetime.now().isoformat(), 'w')
+    log_file.write(config.split_variables())
     df_splits = de.produce_splits(df_train)
     model_list = []
     train_method = models.train_ridge_regression # same model for each split
     counter = 1
     for df in df_splits:
-        model_list.append(train_method(df, 0)) # registered
-        model_list.append(train_method(df, 1)) # casual
+        if df.empty:
+            model_list.extend([None,None])
+            log_file.write('0,\n')
+        else:
+            mod1,str1 = train_method(df, 0)
+            model_list.append(mod1) # registered
+            mod2,str2 = train_method(df, 1)
+            model_list.append(train_method(df, 1)) # casual
+            log_file.write(str(counter) + ', registered,' + config.get_vars(df) + str1)
+            log_file.write(str(counter) + ', casual,'+ config.get_vars(df) + str2)
+        counter += 1
+    log_file.close()
     print "Total time to train: " + str(timeit.default_timer()-start)
     return model_list
     
