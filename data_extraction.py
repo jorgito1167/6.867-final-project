@@ -13,9 +13,18 @@ def read_data():
     
     df_train['index'] = df_train.index
     df_test['index'] = df_test.index
-     
-    create_features(df_train)
-    create_features(df_test)
+    
+    # Create features (week, dow, 
+    df_train = create_features(df_train)
+    df_test = create_features(df_test)
+    
+    # Remove atemp
+    df_train = df_train.drop('atemp',1)
+    df_test = df_test.drop('atemp',1)
+    
+    # set weather 4 = 3
+    df_train = change_weather(df_train)
+    df_test = change_weather(df_test)
 
     return df_train, df_test 
 
@@ -30,8 +39,14 @@ def produce_subsets(x, season, holiday, workingday, weather):
 def create_features(x):
     x['hour'] = x['datetime'].apply(create_hour)
     x['dow'] = x['datetime'].apply(create_dow)
+    x['week'] = x['datetime'].apply(create_week)
+    x['yearpart'] = x['datetime'].apply(create_year_part)
     return x
-        
+
+def change_weather(df):
+    df[df['weather'] == 4]['weather'] = 3
+    return df
+    
 def produce_splits(df):
     df_list = split_var('season', [df])
     df_list = split_var('holiday', df_list)
@@ -73,7 +88,21 @@ def create_hour(date):
 def create_dow(date):
     d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     return d.weekday()
+
+def create_week(date):
+    d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    week = ((d - datetime.datetime(d.year,1,1)).days / 7) + 1
     
-if __name__ == '__main__':
-    read_data()
-  
+    # Get distance from 30th week
+    return abs(30 - week)
+
+def create_year_part():
+    d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    week = ((d - datetime.datetime(d.year,1,1)).days / 7) + 1
+    
+    # 0 if first half of year and 1 if second half of year
+    return int(30 - week > 0)
+    
+#if __name__ == '__main__':
+#    read_data()
+#  

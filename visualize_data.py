@@ -1,5 +1,6 @@
 import pandas as pd
 import math
+import datetime
 import data_extraction as de
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -62,8 +63,9 @@ def visualize(df, count):
     Produces a plot of count vs each of the 9 features.
     '''
     df_train = df.copy()
-    df_train['time'] = df_train['datetime'].apply(de.convert_date)
-    features = ['time', 'season', 'holiday', 'workingday', 'weather', 'temp',
+    #df_train['hour'] = df_train['datetime'].apply(de.create_hour)
+    #df_train['week'] = df_train['datetime'].apply(de.create_week)
+    features = ['hour', 'week', 'holiday', 'workingday', 'weather', 'temp',
                 'atemp', 'humidity', 'windspeed']
     
     f, axarr = plt.subplots(3, 3)
@@ -75,6 +77,24 @@ def visualize(df, count):
             axarr[i,j].plot(x,y)
             axarr[i,j].set_title(str(count)+ " vs " + features[index]) 
     plt.show()
+
+def weekly_temp(df):
+    weeks = list(df['week'].unique())
+    temps = [0]*len(weeks)
+    wind = [0]*len(weeks)
+    humidity = [0]*len(weeks)
+    for i in range(len(weeks)):
+        temps[i] = np.mean(df[df['week'] == weeks[i]]['temp'])
+        wind[i] = np.mean(df[df['week'] == weeks[i]]['windspeed'])
+        humidity[i] = np.mean(df[df['week'] == weeks[i]]['humidity'])
+    
+    f,arr = plt.subplots()
+    arr.scatter(weeks,humidity)
+    arr.plot(weeks,humidity)
+    arr.set_title('Humidity by Week')
+    plt.show()
+        
+        
 
 def plot3d(df, var_list, user, ax):
     x = df[var_list[0]].values
@@ -91,38 +111,86 @@ def heatmap(df):
     rows = list(df['dow'].unique())
     columns = list(df['hour'].unique())
     
-    # Make data
+    # Get Data Counts
     registered_counts = np.zeros((len(rows),len(columns)))
     casual_counts = np.zeros((len(rows),len(columns)))
-    for i in rows:
-        for j in columns:
-            registered_counts[i][j] = sum(df[(df['dow'] == i) 
+    casual_holiday_counts = np.zeros((1,len(columns)))
+    registered_holiday_counts = np.zeros((1,len(columns)))
+    for j in columns:
+        for i in rows:
+            registered_counts[i][j] = np.mean(df[(df['dow'] == i) & (df['holiday'] == 0)
                                 & (df['hour'] == j)]['registered'])
-            casual_counts[i][j] = sum(df[(df['dow'] == i) 
+            casual_counts[i][j] = np.mean(df[(df['dow'] == i) & (df['holiday'] == 0)
                                 & (df['hour'] == j)]['casual'])
-                                
-    row_names = ['M', 'T', 'W', 'Th', 'F', 'Sat', 'Sun']
+        casual_holiday_counts[0][j] = np.mean(df[(df['hour'] == j) 
+                                            & (df['holiday'] == 1)]['casual'])
+        registered_holiday_counts[0][j] = np.mean(df[(df['hour'] == j)
+                                        & (df['holiday'] == 1)]['registered'])
+    #holiday_counts = np.vstack((registered_holiday_counts,casual_holiday_counts))   
+    registered_counts = np.vstack((registered_counts, registered_holiday_counts))
+    casual_counts = np.vstack((casual_counts, casual_holiday_counts))                
+    row_names = ['M', 'T', 'W', 'Th', 'F', 'Sat', 'Sun', 'Holiday']
+    
+    # Plot Regular Counts
     fig,ax=plt.subplots()
     ax.pcolor(registered_counts,cmap=plt.cm.Blues)
     ax.set_xticks(np.arange(0,len(columns))+0.5)
-    ax.set_yticks(np.arange(0,len(rows))+0.5)
+    ax.set_yticks(np.arange(0,len(rows) + 1)+0.5)
     ax.xaxis.tick_top()
     ax.yaxis.tick_left()
     ax.set_xticklabels(columns,minor=False,fontsize=10)
     ax.set_yticklabels(row_names,minor=False,fontsize=10)
-    plt.text(0.5,1.08,'Registered Counts by Hour and Day of Week',
+    plt.text(0.5,1.06,'Registered Counts by Hour and Day of Week',
             fontsize=20,
             horizontalalignment='center',
             transform=ax.transAxes
             )
-    plt.ylabel('Day of the Week',fontsize=20)
-    plt.xlabel('Hour',fontsize=20)
+    plt.ylabel('Day of the Week',fontsize=15)
+    plt.xlabel('Hour',fontsize=15)
     ax.set_xlim(0,24)
     plt.show()
-    # variable correlation
-    # day of week vs hour
-    # holiday vs hour
     
+    # holiday vs hour
+    #row_names = ['Registered','Casual']
+    #fig,ax=plt.subplots()
+    #ax.pcolor(holiday_counts,cmap=plt.cm.Blues)
+    #ax.set_xticks(np.arange(0,len(columns))+0.5)
+    #ax.set_yticks(np.arange(0,2)+0.5)
+    #ax.xaxis.tick_top()
+    #ax.set_xticklabels(columns,minor=False,fontsize=10)
+    #ax.set_yticklabels(row_names,minor=False,fontsize=10)
+    #plt.text(0.5,1.06,'Holiday Counts by Hour',
+    #        fontsize=20,
+    #        horizontalalignment='center',
+    #        transform=ax.transAxes
+    #        )
+    #plt.ylabel('User Type',fontsize=15)
+    #plt.xlabel('Hour',fontsize=15)
+    #ax.set_xlim(0,24)
+    #plt.show()
+    
+    # Variable Correlation
+    #features = ['temp','atemp','humidity','windspeed']
+    #
+    #correlation = np.zeros((len(features),len(features)))
+    #for i in range(len(features)):
+    #    for j in range(len(features)):
+    #        correlation[i][j] = df[features[i]].corr(df[features[j]])
+    #
+    #fig,ax=plt.subplots()
+    #ax.pcolor(correlation,cmap=plt.cm.Blues)
+    #ax.set_xticks(np.arange(0,len(features))+0.5)
+    #ax.set_yticks(np.arange(0,len(features))+0.5)
+    #ax.xaxis.tick_top()
+    #ax.yaxis.tick_left()
+    #ax.set_xticklabels(features,minor=False,fontsize=10)
+    #ax.set_yticklabels(features,minor=False,fontsize=10)
+    #plt.text(0.5,1.06,'Pairwise Feature Correlation',
+    #        fontsize=20,
+    #        horizontalalignment='center',
+    #        transform=ax.transAxes
+    #        )
+    #plt.show()
 
 def get_knn_value(df):
     pass
