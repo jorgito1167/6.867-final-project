@@ -149,22 +149,23 @@ def train_random_forest_regressor(df, user_type):
     feat_filter = SelectKBest(config.filter, k=1)
     model = ensemble.RandomForestRegressor(n_estimators=100)
     mod = Pipeline([('filter', feat_filter), ('rand', model)])
-    best_score = float('inf')    
-    for k in xrange(1,5):
+    best_score = float('inf')   
+    for k in xrange(1,12):
             mod.set_params(filter__k= k)
             val_score = cross_val_score(mod, x, y, scoring = m.metric, cv = config.folds, n_jobs = 3)
-            mean_val_score = val_score.mean()
             mean_val_score = val_score.mean()
             if mean_val_score < best_score:
                 best_score = mean_val_score
                 best_v_score = val_score
                 best_k = k
     mod.set_params(filter__k= best_k)
+    mod.fit(x,y)
     time_to_train = str(np.round(timeit.default_timer()-start,2))
-    out_str = time_to_train + ',' + str(best_k) + ',' + str(None) + ','
+    out_str = time_to_train + ',' + str(best_k) + ',' + 'N\A' + ','
     out_str += str(np.round(best_v_score,3).tolist())[1:-1] + ',' + str(best_score) + '\n'
     print "Size of split: " + str(len(y))
     print "Time to train: " + time_to_train
+    print "Best score: " + str(best_score)
     return mod, out_str
     
 def train_support_vector_regression(df, user_type):

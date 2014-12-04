@@ -2,6 +2,8 @@ import pandas as pd
 import datetime
 import pylab as plt
 from sklearn import linear_model, preprocessing
+import numpy as np
+import config
 
 def read_data():
     '''
@@ -21,7 +23,13 @@ def read_data():
     # Create features (week, dow, yearpart)
     df_train = create_features(df_train)
     df_test = create_features(df_test)
-
+    
+    if config.use_log:
+        df_train.loc[df_train['registered'] ==0,['registered'] ] = 0.1
+        df_train.loc[df_train['casual'] ==0,['casual']] = 0.1
+    
+    df_train['registered'] = np.log(df_train['registered'])
+    df_train['casual'] = np.log(df_train['casual'])
     return df_train, df_test 
 
 def produce_subsets(x, season, holiday, workingday, weather):

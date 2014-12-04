@@ -8,7 +8,7 @@ non_features_counts = ['index', 'atemp','segment','datetime','holiday', 'working
 filter = ranking.rf_ranking
 folds = 5
 split_vars = 'size_of_split, segment, holiday, workingday'
-
+use_log = True
 def split_variables():
     split_variables = 'split number, count_type,' + split_vars +',time_to_train, best_k, best_alpha'
     for i in xrange(folds):

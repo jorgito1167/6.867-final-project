@@ -9,12 +9,12 @@ import datetime
 def train(df_train):
     print 'Start Training'
     start = timeit.default_timer()
-    log_file = open('log_file.csv' , 'w')#+ datetime.datetime.now().isoformat(), 'w')
+    log_file = open('log_file4.csv' , 'w')#+ datetime.datetime.now().isoformat(), 'w')
     log_file.write(config.split_variables())
 
     df_splits = de.process_df(df_train) # splits, normalizes, binarizes, and expands
     model_list = []
-    train_method = models.train_elastic_nets # same model for each split
+    train_method = models.train_random_forest_regressor # same model for each split
     counter = 1
     for df in df_splits:
         if df.empty:
@@ -33,8 +33,9 @@ def train(df_train):
     return model_list
     
 
-def predict(model_list, df_test):
+def predict(model_list, df_test, df_train):
     df_splits = de.process_df(df_test) # splits, normalizes, binarizes, and expands
+    train_splits = de.process_df(df_train)
     
     if len(model_list)!= 2*len(df_splits):
         raise RuntimeError('Different number of models and splits')
@@ -43,22 +44,32 @@ def predict(model_list, df_test):
     for i in xrange(len(df_splits)):
         if df_splits[i].empty:
             continue
-       
+            
+        check_consistency(df_splits[i], train_splits[i]) #check to see that the training split and the testing split have the same charasteristics
+        
         x = df_splits[i].drop(config.non_features_counts, 1).values
+        
         if model_list[2*i] != None:
             r_count = model_list[2*i].predict(x)
-            r_count[r_count < 0] = 0
         else:
-            r_count = 155*np.ones((len(df_splits[i]['index']),))
+            print 'No Model for split: ' + str(i)
+            print len(df_splits[i]['index'])
+            r_count = np.log(155*np.ones((len(df_splits[i]['index']),)))
         
         if model_list[2*i+1] != None:
             c_count = model_list[2*i+1].predict(x)
+            
+        else:
+            print 'No Model for split: ' + str(i)
+            print len(df_splits[i]['index'])
+            c_count = np.log(36*np.ones((len(df_splits[i]['index']),)))
+        
+        if config.use_log:
+            r_count[r_count < 0] = 0
             c_count[c_count < 0] = 0
         else:
-            c_count = 36*np.ones((len(df_splits[i]['index']),))
-        
-        df_splits[i]['registered'] = r_count
-        df_splits[i]['casual'] = c_count
+            df_splits[i]['registered'] = np.power(np.e,r_count)
+            df_splits[i]['casual'] = np.power(np.e,c_count)
         
         out_df = pd.concat([out_df, df_splits[i]])
     out_df = out_df.sort('index')
@@ -67,11 +78,27 @@ def predict(model_list, df_test):
     output.to_csv('out.csv', index = False)
     return out_df
 
+def check_consistency(df1, df2):
+    check_holiday = (df1['holiday'].unique() == df2['holiday'].unique()) and (len(df1['holiday'].unique()) ==1)
+    check_workingday = (df1['workingday'].unique() == df2['workingday'].unique()) and (len(df1['workingday'].unique()) ==1)
+    check_segment = (df1['segment'].unique() == df2['segment'].unique()) and (len(df1['segment'].unique()) ==1)
+    print check_holiday
+    print check_workingday
+    print (df1['workingday'].unique() == df2['workingday'].unique())
+    print df1['workingday'].unique()
+    print df2['workingday'].unique()
+    print check_segment
+    if not(check_holiday and check_workingday and check_segment):
+        raise RuntimeError('DANG! Jeff Chan NO!')
+        
 def metric(estimator, x, y):
     predicted_y = estimator.predict(x) 
-    predicted_y[predicted_y<0] = 0
+    if config.use_log:
+        y = np.power(np.e, y.copy())
+        predicted_y = np.power(np.e, predicted_y)
+    else:
+        predicted_y[predicted_y<0] = 0
     return np.power(sum(np.power((np.log(predicted_y+1)- np.log(y+1)),2))/len(y), 0.5)
-    
     
 def run():
     df_train, df_test = de.read_data()
@@ -81,4 +108,4 @@ def run():
 if __name__ == '__main__':
     df_train, df_test = de.read_data()
     model_list = train(df_train)
-    out_df = predict(model_list, df_test)
+    out_df = predict(model_list, df_test, df_train)
